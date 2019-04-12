@@ -17,17 +17,15 @@ public class DigitalSignatureExample {
 
         byte[] plainText = args[0].getBytes("UTF8");
 
-        // gera o par de chaves RSA
+    	// gera o par de chaves RSA
         System.out.println( "\nStart generating RSA key" );
         KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
         keyGen.initialize(1024);
         KeyPair key = keyGen.generateKeyPair();
         System.out.println( "Finish generating RSA key" );
 
-        // define um objeto signature para utilizar MD5 e RSA
-        // e assina o texto plano com a chave privada,
-        // o provider utilizado tambem eh impresso
-        MySignature sig = MySignature.getInstance("MD5");
+        // MySignature
+        MySignature sig = MySignature.getInstance("MD5WithRSA");
         sig.initSign(key.getPrivate());
         sig.update(plainText);
         byte[] signature = sig.sign();
@@ -43,17 +41,15 @@ public class DigitalSignatureExample {
         // imprime o signature em hexadecimal
         System.out.println( buf.toString() );
 
-        //
-        // verifica a assinatura com a chave publica
-        System.out.println( "\nStart signature verification" );
-        sig.initVerify(key.getPublic());
-        sig.update(plainText);
-        try {
-            if (sig.verify(signature)) {
-                System.out.println( "Signature verified" );
-            } else System.out.println( "Signature failed" );
-        } catch (SignatureException se) {
-            System.out.println( "Singature failed" );
-        }
-    }
+		// verifica a assinatura com a chave publica
+		System.out.println( "\nStart signature verification" );
+		sig.initVerify(key.getPublic());
+		sig.update(plainText);
+		
+		if (sig.verify(signature)) {
+			System.out.println( "Signature verified" );
+		} else {
+			System.out.println( "Signature failed" );
+		}
+	}
 }
