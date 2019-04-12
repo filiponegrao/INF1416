@@ -10,6 +10,12 @@ import java.security.interfaces.DSAKey;
 import java.security.interfaces.DSAParams;
 import java.security.interfaces.DSAPrivateKey;
 import java.security.interfaces.DSAPublicKey;
+import java.util.Arrays;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 
 public class MySignature {
 
@@ -17,86 +23,50 @@ public class MySignature {
     private static MySignature data = null; 
     
     // Signature variables
-    private String algo;
-	private DSAPublicKey pub;
-	private DSAPrivateKey priv;
-	private MessageDigest md;
+	private MessageDigest md;	
+	private Cipher cipher; 
 	
     // Singleton access method
-    public static MySignature getInstance(String algo) throws NoSuchAlgorithmException  { 
+    public static MySignature getInstance(String algo) throws NoSuchAlgorithmException, NoSuchPaddingException  { 
         if (data == null) {
         	data = new MySignature(); 
         }
-        data.algo = algo;
-		data.md = MessageDigest.getInstance(algo);
+        
+        String[] parts = algo.split("With");
+        String alg = parts[0];
+        String crypto = parts[1];
+        
+		data.md = MessageDigest.getInstance(alg);
+		data.cipher = Cipher.getInstance(crypto);
+		
         return data; 
     }
     
     // MARK: Sign methods
     
     public void initSign(PrivateKey privateKey) throws InvalidKeyException {
-    	try {
-			priv = (DSAPrivateKey) privateKey;
-		} catch (ClassCastException cce) {
-			throw new InvalidKeyException("Wrong private key type");
-		}
+		this.cipher.init(Cipher.ENCRYPT_MODE, privateKey);
     }
     
     public void update(byte[] bytes) throws SignatureException {
-    	try {
-			md.update(bytes);
-		} catch (NullPointerException npe) {
-			throw new SignatureException("No SHA digest found");
-		}
+	    this.md.update(bytes);
     }
     
-    public byte[] sign() throws SignatureException {
-    	byte b[] = null;
-		try {
-			b = md.digest();
-		} catch (NullPointerException npe) {
-			throw new SignatureException("No SHA digest found");
-		}
-		return crypt(b, priv);
+    public byte[] sign() throws IllegalBlockSizeException, BadPaddingException {
+    	
+		byte[] digest = this.md.digest();
+		return this.cipher.doFinal(digest);
     }
     
     // MARK: Verify methods
     
     public void initVerify(PublicKey publicKey) throws InvalidKeyException {
-    	try {
-			pub = (DSAPublicKey) publicKey;
-		} catch (ClassCastException cce) {
-			throw new InvalidKeyException("Wrong public key type");
-		}
+		this.cipher.init(Cipher.DECRYPT_MODE, publicKey);
     }
     
-    public boolean verify(byte[] sigBytes) throws SignatureException {
-		byte b[] = null;
-		try {
-			b = md.digest();
-		} catch (NullPointerException npe) {
-			throw new SignatureException("No SHA digest found");
-		}
-		byte sig[] = crypt(sigBytes, pub);
-		return MessageDigest.isEqual(sig, b);
+    public boolean verify(byte[] sigBytes) throws IllegalBlockSizeException, BadPaddingException {
+		byte[] decryptedMessageDigest = this.cipher.doFinal(sigBytes);
+		
+		return Arrays.equals(this.md.digest(), decryptedMessageDigest);
     }
-    
-    
-    // MARK: Auxiliary Methods
-    
-    private byte[] crypt(byte s[], DSAKey key) {
-		DSAParams p = key.getParams();
-		int rotValue = p.getP().intValue();
-		byte d[] = rot(s, (byte) rotValue);
-		return d;
-	}
-
-	private byte[] rot(byte in[], byte rotValue) {
-		byte out[] = new byte[in.length];
-		for (int i = 0; i < in.length; i++) {
-			out[i] = (byte) (in[i] ^ rotValue);
-		}
-		return out;
-	}
-
 }
