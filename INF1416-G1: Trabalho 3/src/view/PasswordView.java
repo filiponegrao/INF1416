@@ -1,32 +1,52 @@
 package view;
 
+import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 
+import controller.AuthenticationService;
+import controller.DBManager;
+import model.TreeNode;
 import model.User;
 
 public class PasswordView extends JFrame {
 
-	private int width = 400;
-	private int height = 500;
+	private int width;
+	private int height;
 
 	private User user;
 
-		private Node root = new Node("");
-	private int numCliques = 0;
+	private TreeNode root = new TreeNode("");
+		
+	// View elements
+	private JLabel passwordLabel;
+	private JTextField passwordText;
+	private List<JButton> buttonList;
+	
+	// Control elements
+	private int tries = 0;
+	private String viewTittle = "";
 
 	public PasswordView(String viewTittle, User user) {
+		
+		DBManager.insereRegistro(3001);
+
+		this.viewTittle = viewTittle;
 		this.user = user;
 		//		DBManager.insereRegistro(3001, (String) user.get("email"));
 
@@ -55,57 +75,119 @@ public class PasswordView extends JFrame {
 		int objectWidth = this.width-(margin*2);
 		int objectHeight = 30;
 
-		JLabel senhaLabel = new JLabel("Senha:");
-		senhaLabel.setBounds(30, 100, 200, 50);
-		content.add(senhaLabel);
+		this.passwordLabel = new JLabel("Senha:");
+		this.passwordLabel.setBounds(margin, margin, objectWidth, objectHeight);
+		content.add(this.passwordLabel);
+		
+		int limitLabel = margin + objectHeight;
 
-		JTextField passwordField = new JTextField();
-		passwordField.setEnabled(false);
-		passwordField.setBounds(30, 150, 200, 50);
-		content.add(passwordField);
+		this.passwordText = new JTextField();
+		this.passwordText.setEnabled(false);
+		this.passwordText.setBounds(margin, limitLabel, objectWidth, objectHeight);
+		this.passwordText.setDisabledTextColor(Color.black);
+		content.add(this.passwordText);
+		
+		int limitNumbers = margin*2 + objectHeight*2;
+		int padding = 5;
+		int numberWidth = (this.width - margin*2)/5 - padding;
 
 		List<List<String>> opcoes = generateRandomOptions(2);
 
-		List<JButton> listaButtons = new ArrayList<JButton>();
+		buttonList = new ArrayList<JButton>();
 
 		for (int i=0; i<5; i++) {
 			JButton senhaButton = new JButton(String.join(" ", opcoes.get(i)));
-			senhaButton.setBounds(30 + (i * 65), 300, 60, 60);
-			senhaButton.addActionListener(new ActionListener () {
-				public void actionPerformed (ActionEvent e) {
-					if (numCliques == 8) {
-						System.out.println("Senha tem no max 8 numeros");
-						return;
-					}
-					numCliques++;
-					passwordField.setText(passwordField.getText() + "*");
-					insereNosFolhas(root, ((JButton)e.getSource()).getText());
-
-					generateRandomButtons(listaButtons);
-				}
-			});
-			listaButtons.add(senhaButton);
+			senhaButton.setBounds(margin + (i * (numberWidth + padding)), limitNumbers, numberWidth, numberWidth);
+			senhaButton.addActionListener(this.numberClicked());
+			buttonList.add(senhaButton);
 			content.add(senhaButton);
-		}		
+		}
+		
+		int limitButton = margin*4 + objectHeight*3;
+		
 		JButton loginButton = new JButton("Login");
-		loginButton.setBounds(60, 400, 300, 50);
+		loginButton.setBounds(margin, limitButton, objectWidth, objectHeight);
+		loginButton.addActionListener(this.loginClicked());
 		content.add(loginButton);
+	}
+	
+	public ActionListener numberClicked() {
+		return new ActionListener () {
+			public void actionPerformed (ActionEvent e) {
+				if (passwordText.getText().length() >= 8) {
+					JOptionPane.showMessageDialog(null, "Senha deve conter até no máximo 8 números.");
+					return;
+				}
+				passwordText.setText(passwordText.getText() + "*");
+				
+				root.insertLeafs(((JButton)e.getSource()).getText());
 
-		loginButton.addActionListener(new ActionListener () {
+				generateRandomButtons(buttonList);
+			}
+		};
+	}
+	
+	public ActionListener loginClicked() {
+		
+		return new ActionListener () {
 			public void actionPerformed(ActionEvent e) {
 				
-			}
-		});
-	}	
+				// Verifica se o usuario esta bloqueado
+				if (user.isBlocked()) {
+					JOptionPane.showMessageDialog(null, "Usuário bloqueado por tentavias incorretas.");
+					return;
+				}
+				
+				// Verifica tamanho da senha
+				int size = passwordText.getText().length();
+				if (size < 6 || size > 8) {
+					JOptionPane.showMessageDialog(null, "Senha deve conter de 6 a 8 números.");
+					cleanPassword();
+					return;
+				}
+				if (AuthenticationService.sharedInstance().checkPasswordTree(root, user, "")) {
+					DBManager.insereRegistro(3003);
+					DBManager.insereRegistro(3002);
 
-	private void insereNosFolhas(Node root, String opcoes) {
-//		if (root.dir == null && root.esq == null) {
-//			root.esq = new Node(""+opcoes.charAt(0));
-//			root.dir = new Node(""+opcoes.charAt(2));
-//			return;
-//		}
-//		insereNosFolhas(root.dir, opcoes);
-//		insereNosFolhas(root.esq, opcoes);
+					new KeyView(viewTittle);
+					
+					dispose();
+					
+//					new TanListView(AuthenticationService.autenticaEmail((String)updatedUser.get("email")));
+				} else {
+					handleWrongTry();
+				}
+				
+				
+			}
+		};
+	}
+	
+	private void handleWrongTry() {
+		DBManager.insereRegistro(3004);
+		// Incrementa numero de tentativas erradas
+		this.tries += 1;
+		// Se for 3 ou mais bloqueia usuario por 2 minutos
+		if (this.tries >= 3) {
+			DBManager.insereRegistro(3006);
+			JOptionPane.showMessageDialog(null, "Senha incorreta! Terceira tentativa mal sucessedida, acesso bloqueado por 2 minutos.");
+			try {
+				user = DBManager.blockUserAccess(user);
+			} catch (ClassNotFoundException | ParseException e1) {
+				e1.printStackTrace();
+			}
+			this.tries = 0;
+
+		} else {
+			String triesString = Integer.toString(3 - this.tries);
+			JOptionPane.showMessageDialog(null, "Senha incorreta!" + triesString + " Tentativas restantes.");
+		}
+		cleanPassword();
+	}
+	
+	private void cleanPassword() {
+		this.root = new TreeNode("");
+		this.passwordText.setText("");
 	}
 
 	private void generateRandomButtons(List<JButton> buttons) {
@@ -114,7 +196,7 @@ public class PasswordView extends JFrame {
 		for (int i=0; i<buttons.size(); i++) {
 			JButton button = buttons.get(i);
 			List<String> option = options.get(i);
-			String optionValue = String.join("\n", option);
+			String optionValue = String.join("\n", option.get(0) + " " + option.get(1));
 			button.setText(optionValue);
 		}
 	}
@@ -123,7 +205,8 @@ public class PasswordView extends JFrame {
 		List<List<String>> options = new ArrayList<List<String>>();
 		String numbers = "0123456789";
 
-		for (int i=0; i < numbers.length()/clusteringCount; i++) {
+		int numbersCount = numbers.length();
+		for (int i=0; i < numbersCount/clusteringCount; i++) {
 
 			Random rand = new Random();
 			List<String> option = new ArrayList<String>();
