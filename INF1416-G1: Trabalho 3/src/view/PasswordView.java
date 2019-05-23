@@ -26,216 +26,222 @@ import model.User;
 
 public class PasswordView extends JFrame {
 
-	private int width;
-	private int height;
+    private int width;
+    private int height;
 
-	private User user;
+    private User user;
 
-	private TreeNode root = new TreeNode("");
-		
-	// View elements
-	private JLabel passwordLabel;
-	private JTextField passwordText;
-	private List<JButton> buttonList;
-	
-	// Control elements
-	private int tries = 0;
-	private String viewTittle = "";
+    private TreeNode root = new TreeNode("");
 
-	public PasswordView(String viewTittle, User user) {
-		
-		DBManager.insereRegistro(3001);
+    // View elements
+    private JLabel passwordLabel;
+    private JTextField passwordText;
+    private List<JButton> buttonList;
 
-		this.viewTittle = viewTittle;
-		this.user = user;
-		//		DBManager.insereRegistro(3001, (String) user.get("email"));
+    // Control elements
+    private int tries = 0;
+    private String viewTittle = "";
 
-		// Define o titulo
-		setTitle(viewTittle + ": Login");
+    public PasswordView(String viewTittle, User user) {
 
-		// Define o quit pelo botao
-		this.setDefaultCloseOperation(EXIT_ON_CLOSE);
+        this.viewTittle = viewTittle;
+        this.user = user;
 
-		// Define as dimensoes do frame
-		Dimension dimension = Toolkit.getDefaultToolkit().getScreenSize();
-		this.width = (int) dimension.getWidth()/5;
-		this.height = this.width;
-		this.setSize (this.width, this.height);
-		this.setResizable(false);
+        // Define o titulo
+        setTitle(viewTittle + ": Login");
 
-		// Define a posicao
-		int x = (int) ((dimension.getWidth() - this.width) / 2);
-		int y = (int) ((dimension.getHeight() - this.height) / 2);
-		this.setLocation(x, y);
+        // Define o quit pelo botao
+        this.setDefaultCloseOperation(EXIT_ON_CLOSE);
 
-		// Define variaveis visuais
-		Container content = getContentPane();
-		this.setLayout(null);
-		int margin = 20;
-		int objectWidth = this.width-(margin*2);
-		int objectHeight = 30;
+        // Define as dimensoes do frame
+        Dimension dimension = Toolkit.getDefaultToolkit().getScreenSize();
+        this.width = (int) dimension.getWidth()/5;
+        this.height = this.width;
+        this.setSize (this.width, this.height);
+        this.setResizable(false);
 
-		this.passwordLabel = new JLabel("Senha:");
-		this.passwordLabel.setBounds(margin, margin, objectWidth, objectHeight);
-		content.add(this.passwordLabel);
-		
-		int limitLabel = margin + objectHeight;
+        // Define a posicao
+        int x = (int) ((dimension.getWidth() - this.width) / 2);
+        int y = (int) ((dimension.getHeight() - this.height) / 2);
+        this.setLocation(x, y);
 
-		this.passwordText = new JTextField();
-		this.passwordText.setEnabled(false);
-		this.passwordText.setBounds(margin, limitLabel, objectWidth, objectHeight);
-		this.passwordText.setDisabledTextColor(Color.black);
-		content.add(this.passwordText);
-		
-		int limitNumbers = margin*2 + objectHeight*2;
-		int padding = 5;
-		int numberWidth = (this.width - margin*2)/5 - padding;
+        // Define variaveis visuais
+        Container content = getContentPane();
+        this.setLayout(null);
+        int margin = 20;
+        int objectWidth = this.width-(margin*2);
+        int objectHeight = 30;
 
-		List<List<String>> opcoes = generateRandomOptions(2);
+        this.passwordLabel = new JLabel("Senha:");
+        this.passwordLabel.setBounds(margin, margin, objectWidth, objectHeight);
+        content.add(this.passwordLabel);
 
-		buttonList = new ArrayList<JButton>();
+        int limitLabel = margin + objectHeight;
 
-		for (int i=0; i<5; i++) {
-			JButton senhaButton = new JButton(String.join(" ", opcoes.get(i)));
-			senhaButton.setBounds(margin + (i * (numberWidth + padding)), limitNumbers, numberWidth, numberWidth);
-			senhaButton.addActionListener(this.numberClicked());
-			buttonList.add(senhaButton);
-			content.add(senhaButton);
-		}
-		
-		int limitButton = margin*4 + objectHeight*3;
-		
-		JButton loginButton = new JButton("Login");
-		loginButton.setBounds(margin, limitButton, objectWidth, objectHeight);
-		loginButton.addActionListener(this.loginClicked());
-		content.add(loginButton);
-	}
-	
-	public ActionListener numberClicked() {
-		return new ActionListener () {
-			public void actionPerformed (ActionEvent e) {
-				if (passwordText.getText().length() >= 8) {
-					JOptionPane.showMessageDialog(null, "Senha deve conter até no máximo 8 números.");
-					return;
-				}
-				passwordText.setText(passwordText.getText() + "*");
-				
-				root.insertLeafs(((JButton)e.getSource()).getText());
+        this.passwordText = new JTextField();
+        this.passwordText.setEnabled(false);
+        this.passwordText.setBounds(margin, limitLabel, objectWidth, objectHeight);
+        this.passwordText.setDisabledTextColor(Color.black);
+        content.add(this.passwordText);
 
-				generateRandomButtons(buttonList);
-			}
-		};
-	}
-	
-	public ActionListener loginClicked() {
-		
-		return new ActionListener () {
-			public void actionPerformed(ActionEvent e) {
-				
-				// Verifica se o usuario esta bloqueado
-				if (user.isBlocked()) {
-					JOptionPane.showMessageDialog(null, "Usuário bloqueado por tentavias incorretas.");
-					return;
-				}
-				
-				// Verifica tamanho da senha
-				int size = passwordText.getText().length();
-				if (size < 6 || size > 8) {
-					JOptionPane.showMessageDialog(null, "Senha deve conter de 6 a 8 números.");
-					cleanPassword();
-					return;
-				}
-				if (AuthenticationService.sharedInstance().checkPasswordTree(root, user, "")) {
-					DBManager.insereRegistro(3003);
-					DBManager.insereRegistro(3002);
+        int limitNumbers = margin*2 + objectHeight*2;
+        int padding = 5;
+        int numberWidth = (this.width - margin*2)/5 - padding;
 
-					new KeyView(viewTittle);
-					
-					dispose();
-					
-//					new TanListView(AuthenticationService.autenticaEmail((String)updatedUser.get("email")));
-				} else {
-					handleWrongTry();
-				}
-				
-				
-			}
-		};
-	}
-	
-	private void handleWrongTry() {
-		DBManager.insereRegistro(3004);
-		// Incrementa numero de tentativas erradas
-		this.tries += 1;
-		// Se for 3 ou mais bloqueia usuario por 2 minutos
-		if (this.tries >= 3) {
-			DBManager.insereRegistro(3006);
-			JOptionPane.showMessageDialog(null, "Senha incorreta! Terceira tentativa mal sucessedida, acesso bloqueado por 2 minutos.");
-			try {
-				user = DBManager.blockUserAccess(user);
-			} catch (ClassNotFoundException | ParseException e1) {
-				e1.printStackTrace();
-			}
-			this.tries = 0;
-			
-			new LoginView("INF1416");
-			dispose();
+        List<List<String>> opcoes = generateRandomOptions(2);
 
-		} else {
-			String triesString = Integer.toString(3 - this.tries);
-			JOptionPane.showMessageDialog(null, "Senha incorreta!" + triesString + " Tentativas restantes.");
-		}
-		cleanPassword();
-	}
-	
-	private void cleanPassword() {
-		this.root = new TreeNode("");
-		this.passwordText.setText("");
-	}
+        buttonList = new ArrayList<JButton>();
 
-	private void generateRandomButtons(List<JButton> buttons) {
-		List<List<String>> options = generateRandomOptions(2);
+        for (int i=0; i<5; i++) {
+            JButton senhaButton = new JButton(String.join(" ", opcoes.get(i)));
+            senhaButton.setBounds(margin + (i * (numberWidth + padding)), limitNumbers, numberWidth, numberWidth);
+            senhaButton.addActionListener(this.numberClicked());
+            buttonList.add(senhaButton);
+            content.add(senhaButton);
+        }
 
-		for (int i=0; i<buttons.size(); i++) {
-			JButton button = buttons.get(i);
-			List<String> option = options.get(i);
-			String optionValue = String.join("\n", option.get(0) + " " + option.get(1));
-			button.setText(optionValue);
-		}
-	}
+        int limitButton = margin*4 + objectHeight*3;
 
-	private List<List<String>> generateRandomOptions(int clusteringCount) {
-		List<List<String>> options = new ArrayList<List<String>>();
-		String numbers = "0123456789";
+        JButton loginButton = new JButton("Login");
+        loginButton.setBounds(margin, limitButton, objectWidth, objectHeight);
+        loginButton.addActionListener(this.loginClicked());
+        content.add(loginButton);
+    }
 
-		int numbersCount = numbers.length();
-		for (int i=0; i < numbersCount/clusteringCount; i++) {
+    public ActionListener numberClicked() {
+        return new ActionListener () {
+            public void actionPerformed (ActionEvent e) {
+                if (passwordText.getText().length() >= 8) {
+                    JOptionPane.showMessageDialog(null, "Senha deve conter até no máximo 8 números.");
+                    return;
+                }
+                passwordText.setText(passwordText.getText() + "*");
 
-			Random rand = new Random();
-			List<String> option = new ArrayList<String>();
+                root.insertLeafs(((JButton)e.getSource()).getText());
 
-			// Gera o primeiro indice aleatorio
-			int index = rand.nextInt(numbers.length());
-			char selectedChar = numbers.charAt(index);
-			String stringChar = String.valueOf(selectedChar);
-			// Adiciona 
-			option.add(stringChar);
-			// Remove o selecionado dos possiveis
-			numbers = numbers.replaceAll(stringChar, "");
+                generateRandomButtons(buttonList);
+            }
+        };
+    }
 
-			// Gera o segundo indice aleatorio
-			index = rand.nextInt(numbers.length());
-			selectedChar = numbers.charAt(index);
-			stringChar = String.valueOf(selectedChar);
-			// Adiciona 
-			option.add(stringChar);
+    public ActionListener loginClicked() {
 
-			// Remove o selecionado dos possiveis
-			numbers = numbers.replaceAll(stringChar, "");
+        return new ActionListener () {
+            public void actionPerformed(ActionEvent e) {
+                DBManager.insereRegistro(3001);
 
-			options.add(option);
-		}
-		return options;
-	}
+                // Verifica se o usuario esta bloqueado
+                if (user.isBlocked()) {
+                    JOptionPane.showMessageDialog(null, "Usuário bloqueado por tentavias incorretas.");
+                    return;
+                }
+
+                // Verifica tamanho da senha
+                int size = passwordText.getText().length();
+                if (size < 6 || size > 8) {
+                    JOptionPane.showMessageDialog(null, "Senha deve conter de 6 a 8 números.");
+                    cleanPassword();
+                    return;
+                }
+                if (AuthenticationService.sharedInstance().checkPasswordTree(root, user, "")) {
+                    DBManager.insereRegistro(3003);
+
+                    new KeyView(viewTittle);
+
+                    dispose();
+
+                    DBManager.insereRegistro(3002);
+                } else {
+                    handleWrongTry();
+                }
+
+
+            }
+        };
+    }
+
+    private void handleWrongTry() {
+
+        // Incrementa numero de tentativas erradas
+        this.tries += 1;
+
+        if(this.tries == 1) {
+            DBManager.insereRegistro(3004);
+        }
+        else if(this.tries == 2) {
+            DBManager.insereRegistro(3005);
+        }
+        // Se for 3 ou mais bloqueia usuario por 2 minutos
+        else if (this.tries >= 3) {
+            DBManager.insereRegistro(3006);
+            JOptionPane.showMessageDialog(null, "Senha incorreta! Terceira tentativa mal sucessedida, acesso bloqueado por 2 minutos.");
+            try {
+                user = DBManager.blockUserAccess(user);
+
+                DBManager.insereRegistro(3007);
+            } catch (ClassNotFoundException | ParseException e1) {
+                e1.printStackTrace();
+            }
+            this.tries = 0;
+
+            new LoginView("INF1416");
+            dispose();
+
+        } else {
+            String triesString = Integer.toString(3 - this.tries);
+            JOptionPane.showMessageDialog(null, "Senha incorreta!" + triesString + " Tentativas restantes.");
+        }
+        cleanPassword();
+    }
+
+    private void cleanPassword() {
+        this.root = new TreeNode("");
+        this.passwordText.setText("");
+    }
+
+    private void generateRandomButtons(List<JButton> buttons) {
+        List<List<String>> options = generateRandomOptions(2);
+
+        for (int i=0; i<buttons.size(); i++) {
+            JButton button = buttons.get(i);
+            List<String> option = options.get(i);
+            String optionValue = String.join("\n", option.get(0) + " " + option.get(1));
+            button.setText(optionValue);
+        }
+    }
+
+    private List<List<String>> generateRandomOptions(int clusteringCount) {
+        List<List<String>> options = new ArrayList<List<String>>();
+        String numbers = "0123456789";
+
+        int numbersCount = numbers.length();
+        for (int i=0; i < numbersCount/clusteringCount; i++) {
+
+            Random rand = new Random();
+            List<String> option = new ArrayList<String>();
+
+            // Gera o primeiro indice aleatorio
+            int index = rand.nextInt(numbers.length());
+            char selectedChar = numbers.charAt(index);
+            String stringChar = String.valueOf(selectedChar);
+            // Adiciona
+            option.add(stringChar);
+            // Remove o selecionado dos possiveis
+            numbers = numbers.replaceAll(stringChar, "");
+
+            // Gera o segundo indice aleatorio
+            index = rand.nextInt(numbers.length());
+            selectedChar = numbers.charAt(index);
+            stringChar = String.valueOf(selectedChar);
+            // Adiciona
+            option.add(stringChar);
+
+            // Remove o selecionado dos possiveis
+            numbers = numbers.replaceAll(stringChar, "");
+
+            options.add(option);
+        }
+        return options;
+    }
 
 }
