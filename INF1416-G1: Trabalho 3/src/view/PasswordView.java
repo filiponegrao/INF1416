@@ -177,6 +177,9 @@ public class PasswordView extends JFrame {
 				e1.printStackTrace();
 			}
 			this.tries = 0;
+			
+			new LoginView("INF1416");
+			dispose();
 
 		} else {
 			String triesString = Integer.toString(3 - this.tries);

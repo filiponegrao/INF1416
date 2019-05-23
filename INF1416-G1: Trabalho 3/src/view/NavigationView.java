@@ -60,7 +60,7 @@ public class NavigationView extends JFrame {
 		// Define as dimensoes do frame
 		Dimension dimension = Toolkit.getDefaultToolkit().getScreenSize();
 		this.width = (int) dimension.getWidth()/4;
-		this.height = (int) (this.width * 1.5);
+		this.height = (int) (this.width * 2);
 		this.setSize (this.width, this.height);
 		this.setResizable(false);
 
@@ -110,6 +110,11 @@ public class NavigationView extends JFrame {
 		this.remove(this.contentView);
 		this.contentView = this.menuPanel;
 		this.container.add(this.contentView);
+		
+		// Atualiza a info view
+		String userCount = "Total de acessos: " + Integer.toString(DBManager.getUsersCount());
+		this.infoView.setText(userCount);
+		
 		this.repaint();
 	}
 	

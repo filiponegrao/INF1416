@@ -136,7 +136,7 @@ public class AuthenticationService {
 
 
 
-    public boolean isPrivateKeyValid(String password, String pathString) throws Exception {
+    public void isPrivateKeyValid(String password, String pathString) throws Exception {
     	
     	Path path = Paths.get(pathString);
     	
@@ -144,7 +144,8 @@ public class AuthenticationService {
             privateKey = getPrivateKey(password, path);
         } catch (Exception e) {
 //            DBManager.log(4005);
-            return false;
+        	// Frase secreta incorreta
+        	throw new Exception("Frase secreta incorreta.");
         }
 
         publicKey = getPublicKey();
@@ -160,12 +161,15 @@ public class AuthenticationService {
         signature.initVerify(publicKey);
         signature.update(message);
 
-        if(signature.verify(cipherMessage))
-            return true;
+        if(signature.verify(cipherMessage)) {
+            return ;
+        } else {
+        	throw new Exception("Chave privada inválida.");
+
+        }
 
 //        Database.log(4006, Validation1.user.getString("email"));
 
-        return false;
 		}
 
 	

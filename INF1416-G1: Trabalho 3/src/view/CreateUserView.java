@@ -159,7 +159,8 @@ public class CreateUserView extends JPanel {
 			ceriticateText += "<br>Série: " + certificate.getSerialNumber();
 			ceriticateText += "<br>Validade: " + certificate.getNotAfter();
 			ceriticateText += "<br>Tipo de Assinatura: " + certificate.getSigAlgName();
-			ceriticateText += "<br>Emissor: " + getEmailFromStringNameCert(certificate.getIssuerDN().getName());
+			ceriticateText += "<br>Emissor: " + getNameFromStringNameCert(certificate.getIssuerDN().getName());
+			ceriticateText += "<br>Usuário: " + getNameFromStringNameCert(certificate.getSubjectDN().getName());
 			ceriticateText += "<br>Email: " + getEmailFromStringNameCert(certificate.getSubjectDN().getName());
 
 			ceriticateText += "</html>";
@@ -187,6 +188,20 @@ public class CreateUserView extends JPanel {
 		}
 	}
 	
+	private String getNameFromStringNameCert(String cert) {
+		String[] parts = cert.split(",");
+		String part = parts[1];
+		if (part.contains("=")) {
+			parts = part.split("=");
+			if (parts.length > 1) {
+				return parts[1];
+			} else {
+				return part;
+			}
+		} else {
+			return part;
+		}
+	}
 	public void createUser() {
 		String password = new String(passwordText.getPassword());
 		String group = groups[selectGroup.getSelectedIndex()];

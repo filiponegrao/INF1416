@@ -5,12 +5,14 @@ import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.text.ParseException;
 
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
 
@@ -30,13 +32,20 @@ public class KeyView extends JFrame {
 	private JLabel uploadPath;
 	private JButton uploadButton;
 	private JLabel passwordLabel;
-	private JTextField passwordText;
+	
+	private JPasswordField passwordText;
 	private JButton loginButton;
 	
+	private int tries = 0;
+	
+	private User user;
+
 	public KeyView(String viewTittle) {
 		this.viewTittle = viewTittle;
 		// Define o titulo
 		setTitle(this.viewTittle + ": Verificacao de credencial");
+		
+		user = AuthenticationService.sharedInstance().getUser();
 		
 		// Define o quit pelo botao
 		this.setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -44,7 +53,7 @@ public class KeyView extends JFrame {
 		// Define as dimensoes do frame
 		Dimension dimension = Toolkit.getDefaultToolkit().getScreenSize();
 		this.width = (int) dimension.getWidth()/5;
-		this.height = this.width;
+		this.height = (int) (this.width * 1.2);
 		this.setSize (this.width, this.height);
 		this.setResizable(false);
 		
@@ -90,7 +99,7 @@ public class KeyView extends JFrame {
 		int textOrigin = labelOrigin + objectHeight + margin;
 		
 		// Textfield username
-		this.passwordText = new JTextField();
+		this.passwordText = new JPasswordField();
 		this.passwordText.setBounds(margin, textOrigin, objectWidth, objectHeight);
 		content.add(this.passwordText);
 		
@@ -121,31 +130,63 @@ public class KeyView extends JFrame {
 	public ActionListener loginClicked() {
 		return new ActionListener () {
 			public void actionPerformed(ActionEvent e) {
-				int size = passwordText.getText().length();
+				
+				// Verifica se o usuario esta bloqueado
+				if (user.isBlocked()) {
+					JOptionPane.showMessageDialog(null, "Usuário bloqueado por tentavias incorretas.");
+					new LoginView("INF1416");
+					dispose();
+				}
+				
+				String pass = new String(passwordText.getPassword());
+				int size = pass.length();
 				if (size == 0) {
 					JOptionPane.showMessageDialog(null, "Frase secreta não pode ser vazia");
 					return;
 				}
 				
 				try {
-					if (AuthenticationService.sharedInstance().isPrivateKeyValid(passwordText.getText(), uploadPath.getText()) ) {
+					
+					AuthenticationService.sharedInstance().isPrivateKeyValid(pass, uploadPath.getText());
 						
-						// Adiciona um acesso ao usuario
-						User user = AuthenticationService.sharedInstance().getUser();
-						DBManager.addUserAccess(user);
-						new NavigationView();
-						dispose();
-
-					} else {
-						JOptionPane.showMessageDialog(null, "Arquivo binário incorreto!");
-					}
+					// Adiciona um acesso ao usuario
+					User user = AuthenticationService.sharedInstance().getUser();
+					DBManager.addUserAccess(user);
+					new NavigationView();
+					dispose();
+					
 				} catch (Exception e1) {
 					// TODO Auto-generated catch block
-					JOptionPane.showMessageDialog(null, "Problema na leitura do arquivo");
+					String message = e1.getLocalizedMessage();
+					JOptionPane.showMessageDialog(null, message);
 					e1.printStackTrace();
+					
+					handleWrongTry();
 				}
 			}
 		};
 	}
+	
+	private void handleWrongTry() {
+		DBManager.insereRegistro(3004);
+		// Incrementa numero de tentativas erradas
+		this.tries += 1;
+		// Se for 3 ou mais bloqueia usuario por 2 minutos
+		if (this.tries >= 3) {
+			DBManager.insereRegistro(3006);
+			JOptionPane.showMessageDialog(null, "Senha incorreta! Terceira tentativa mal sucessedida, acesso bloqueado por 2 minutos.");
+			try {
+				user = DBManager.blockUserAccess(user);
+			} catch (ClassNotFoundException | ParseException e1) {
+				e1.printStackTrace();
+			}
+			this.tries = 0;
+
+		} else {
+			String triesString = Integer.toString(3 - this.tries);
+			JOptionPane.showMessageDialog(null, "Senha incorreta!" + triesString + " Tentativas restantes.");
+		}
+	}
+		
 
 }

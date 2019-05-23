@@ -61,7 +61,7 @@ public class LoginView extends JFrame {
 		email.setText("admin@inf1416.puc-rio.br");
 		email.setBounds(margin, margin, objectWidth, objectHeight);
 		email.setEnabled(true);
-		content.add(email);
+//		content.add(email);
 		
 		// Label username
 		JLabel usernameLabel = new JLabel("username:");

@@ -32,6 +32,11 @@ public class FilesPanel extends JPanel {
 	private JButton listButton;
 	
 	private String path = "";
+	
+	int tableHeight;
+	int tableOrigin;
+	int margin;
+	int objectWidth;
 
 	public FilesPanel(NavigationView navigation, int x, int y, int w, int h) {
 		this.navigation = navigation;
@@ -43,8 +48,8 @@ public class FilesPanel extends JPanel {
 
 		setLayout(null);
 
-		int margin = 20;
-		int objectWidth = w-(margin*2);
+		this.margin = 20;
+		this.objectWidth = w-(margin*2);
 		int objectHeight = 30;
 
 		// Label username
@@ -72,25 +77,10 @@ public class FilesPanel extends JPanel {
 		this.listButton.addActionListener(this.listIndex());
 		this.add(this.listButton);
 
-		String[] columnNames = {"Nome codigo","Nome secreto", "Dono", "Grupo"};
-		Object[][] data = {};
-		DefaultTableModel tableModel = new DefaultTableModel(data, columnNames);
-
-		this.table = new JTable(tableModel) {
-			public boolean isCellEditable(int nRow, int nCol) {
-				return false;
-			}
-		};
-
-		int tableHeight = h - uploadOrigin - objectHeight - margin*4;
-		int tableOrigin = uploadOrigin + objectHeight + margin;
-
-		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		JScrollPane scrollPane = new JScrollPane(table);
-		scrollPane.setBounds(margin, tableOrigin, objectWidth, tableHeight);
-		table.setFillsViewportHeight(true);
-
-
+		this.tableHeight = h - uploadOrigin - objectHeight - margin*4;
+		this.tableOrigin = uploadOrigin + objectHeight + margin;
+	
+		this.addTable(new String[][] {});
 
 		int buttonOrigin = h - objectHeight - margin;
 		// Botao de voltar
@@ -99,9 +89,29 @@ public class FilesPanel extends JPanel {
 		this.backButton.addActionListener(this.back());
 		this.add(this.backButton);
 
+	}
+	
+	public void addTable(String[][] data) {
+		if (this.table != null) {
+			this.remove(this.table);
+		}
+		
+		String[] columnNames = {"Nome codigo","Nome secreto", "Dono", "Grupo"};
+		DefaultTableModel tableModel = new DefaultTableModel(data, columnNames);
+
+		this.table = new JTable(tableModel) {
+			public boolean isCellEditable(int nRow, int nCol) {
+				return false;
+			}
+		};
+
+		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		JScrollPane scrollPane = new JScrollPane(table);
+		scrollPane.setBounds(margin, tableOrigin, objectWidth, tableHeight);
+		table.setFillsViewportHeight(true);
+		
 		this.add(table.getTableHeader());
 		this.add(scrollPane);
-
 	}
 	
 	public ActionListener selectFile() {
@@ -130,8 +140,10 @@ public class FilesPanel extends JPanel {
 		return new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				try {
-					String[][] index = FileController.sharedInstance().getFilesIndex(path);
-					System.out.println(index);
+					String[][] data = FileController.sharedInstance().getFilesIndex(path);
+					
+					addTable(data);
+					
 				} catch (Exception e1) {
 					JOptionPane.showMessageDialog(null, "Erro ao ler arquivo de index");
 					e1.printStackTrace();
