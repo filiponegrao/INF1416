@@ -103,22 +103,29 @@ public class FilesPanel extends JPanel {
 		String[] columnNames = {"Nome codigo","Nome secreto", "Dono", "Grupo"};
 		DefaultTableModel tableModel = new DefaultTableModel(data, columnNames);
 
-		this.table = new JTable(tableModel);
-		
+		this.table = new JTable(tableModel) {
+			public boolean isCellEditable(int nRow, int nCol) {
+				return false;
+			}
+		};
+
 		ListSelectionListener listener = new ListSelectionListener(){
-	        public void valueChanged(ListSelectionEvent event) {
-	            // do some actions here, for example
-	            // print first column value from selected row
-	        	if (selectedIndex != table.getSelectedRow()) {
-	        		String fileName = table.getValueAt(table.getSelectedRow(), 0).toString();
-	        		String fileSecret = table.getValueAt(table.getSelectedRow(), 1).toString();
-	        		
-	        		checkAndOpenFile(fileName, fileSecret);
-	        	}
-	        	selectedIndex = table.getSelectedRow();
-	        }
-	    };
-	    
+			public void valueChanged(ListSelectionEvent event) {
+				// do some actions here, for example
+				// print first column value from selected row
+				if (selectedIndex != table.getSelectedRow()) {
+					String fileName = table.getValueAt(table.getSelectedRow(), 0).toString();
+					String fileSecret = table.getValueAt(table.getSelectedRow(), 1).toString();
+					String fileOwner = table.getValueAt(table.getSelectedRow(), 2).toString();
+					String fileGroup = table.getValueAt(table.getSelectedRow(), 3).toString();
+
+
+					checkAndOpenFile(fileName, fileSecret, fileOwner, fileGroup);
+				}
+				selectedIndex = table.getSelectedRow();
+			}
+		};
+
 		table.getSelectionModel().addListSelectionListener(listener);
 
 		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -131,9 +138,23 @@ public class FilesPanel extends JPanel {
 
 		this.remove(this.listButton);
 	}
-	
-	public void checkAndOpenFile(String fileName, String fileSecret) {
-		
+
+	public void checkAndOpenFile(String fileName, String fileSecret, String fileOwner, String fileGroup) {
+		String filePath = this.path + "/" + fileName;
+		String secretPath = this.path + "/" + fileSecret;
+
+		if (FileController.sharedInstance().checkAccess(fileOwner, fileGroup)) {
+			try {
+				FileController.sharedInstance().createSecretFile(filePath, secretPath);
+			} catch (Exception e) {
+				String message = e.getLocalizedMessage();
+				JOptionPane.showMessageDialog(null, message);
+
+			}
+		} else {
+			JOptionPane.showMessageDialog(null, "Voce não possui permissão para ler este arquivo");
+		}
+
 	}
 
 	public ActionListener buttonFolderClicked() {

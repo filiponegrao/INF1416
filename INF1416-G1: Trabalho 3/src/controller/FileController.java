@@ -12,6 +12,8 @@ import java.security.Signature;
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 
+import model.User;
+
 public class FileController {
 	
 	private static FileController data = new FileController();
@@ -41,7 +43,8 @@ public class FileController {
 
         if(!isSignatureFine(filePath, fileContent)) {
             DBManager.insereRegistro(8016);
-            return null; // do something
+            
+            throw new Exception("O arquivo não parece estar íntegro.");
         }
         DBManager.insereRegistro(8014);
 
@@ -87,7 +90,7 @@ public class FileController {
 //            Database.log(8015, filePath, Validation1.user.getString("email"));
             e.printStackTrace();
 
-            return null;
+            throw new Exception("Chave privada incorreta");
         }
     }
     
@@ -104,37 +107,47 @@ public class FileController {
     
     // MARK: File checker
     
-//    public boolean isAccessible(String fileOwner, String fileGroup) {
-//        try {
-//            if(isFromGroup(fileGroup) || isFromOwner(fileOwner))
-//                return true;
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//
-//        return false;
-//    }
+    public boolean checkAccess(String fileOwner, String fileGroup) {
+        try {
+            if(isFromGroup(fileGroup) || isFromOwner(fileOwner))
+                return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
-//    public boolean isFromGroup(String fileGroup) throws Exception {
-//        int userGroupID = Validation1.user.getInt("grupo");
-//        String userGroup = DAO.getInstance().getGrupoNome(userGroupID);
-//
-//        if(userGroup.equalsIgnoreCase(fileGroup))
-//            return true;
-//
-//        return false;
-//    }
-//
-//    public boolean isFromOwner(String fileOwner) throws Exception {
-//        String ownerEmail = Validation1.user.getString("email");
-//
-//        if(ownerEmail.equalsIgnoreCase(fileOwner))
-//            return true;
-//
-//        return false;
-//    }
+        return false;
+    }
+
+    public boolean isFromGroup(String fileGroup) throws Exception {
+    	User user = AuthenticationService.sharedInstance().getUser();
+    	if (user == null) return false;
+    	
+        if(user.getGroupName().equalsIgnoreCase(fileGroup))
+            return true;
+
+        return false;
+    }
+
+    public boolean isFromOwner(String fileOwner) throws Exception {
+    	User user = AuthenticationService.sharedInstance().getUser();
+    	if (user == null) return false;
+    	
+        if(user.getEmail().equalsIgnoreCase(fileOwner))
+            return true;
+
+        return false;
+    }
     
+    public void createSecretFile(String filePath, String secretPath) throws Exception {
+        byte[] fileContent = readFile(filePath);
+        createAndWriteFile(secretPath, fileContent);
+    }
     
+    public void createAndWriteFile(String filePath, byte[] content) throws Exception {
+        Path path = Paths.get(filePath);
+        Files.write(path, content);
+    }
+        
     
     
     
