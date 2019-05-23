@@ -59,8 +59,8 @@ public class NavigationView extends JFrame {
 
 		// Define as dimensoes do frame
 		Dimension dimension = Toolkit.getDefaultToolkit().getScreenSize();
-		this.width = (int) dimension.getWidth()/4;
-		this.height = (int) (this.width * 2);
+		this.width = (int) dimension.getWidth()/2;
+		this.height = (int) (this.width);
 		this.setSize (this.width, this.height);
 		this.setResizable(false);
 

@@ -5,6 +5,7 @@ import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.text.ParseException;
 
 import javax.swing.JButton;
@@ -114,15 +115,20 @@ public class KeyView extends JFrame {
 		this.setVisible(true);
 	}
 	
+	public void openFolder() {
+		JFileChooser fileChooser = new JFileChooser();
+		fileChooser.setCurrentDirectory(new File("./tokens/Keys/"));
+		 if(fileChooser.showOpenDialog(uploadButton) == JFileChooser.APPROVE_OPTION) {
+				String path = fileChooser.getSelectedFile().getPath();
+			 	uploadPath.setText(path);
+		 }	
+	}
+	
 	public ActionListener selectFile() {
 		 
 		 return new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				 JFileChooser fileChooser = new JFileChooser();
-				 if(fileChooser.showOpenDialog(uploadButton) == JFileChooser.APPROVE_OPTION) {
-						String path = fileChooser.getSelectedFile().getPath();
-					 	uploadPath.setText(path);
-				 }	 				
+				openFolder();  				
 			}
 		};
 	}
@@ -181,6 +187,9 @@ public class KeyView extends JFrame {
 				e1.printStackTrace();
 			}
 			this.tries = 0;
+			
+			new LoginView("INF1416");
+			dispose();
 
 		} else {
 			String triesString = Integer.toString(3 - this.tries);

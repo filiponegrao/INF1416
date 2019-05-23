@@ -101,4 +101,41 @@ public class FileController {
 
         return signature.verify(fileSignature);
     }
+    
+    // MARK: File checker
+    
+//    public boolean isAccessible(String fileOwner, String fileGroup) {
+//        try {
+//            if(isFromGroup(fileGroup) || isFromOwner(fileOwner))
+//                return true;
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//
+//        return false;
+//    }
+
+//    public boolean isFromGroup(String fileGroup) throws Exception {
+//        int userGroupID = Validation1.user.getInt("grupo");
+//        String userGroup = DAO.getInstance().getGrupoNome(userGroupID);
+//
+//        if(userGroup.equalsIgnoreCase(fileGroup))
+//            return true;
+//
+//        return false;
+//    }
+//
+//    public boolean isFromOwner(String fileOwner) throws Exception {
+//        String ownerEmail = Validation1.user.getString("email");
+//
+//        if(ownerEmail.equalsIgnoreCase(fileOwner))
+//            return true;
+//
+//        return false;
+//    }
+    
+    
+    
+    
+    
 }

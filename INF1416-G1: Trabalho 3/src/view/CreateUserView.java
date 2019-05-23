@@ -3,6 +3,7 @@ package view;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.security.cert.X509Certificate;
 
 import javax.swing.JButton;
@@ -27,18 +28,18 @@ public class CreateUserView extends JPanel {
 	private JButton backButton;
 	private JButton confirmationButton;
 
-	
+
 	private JComboBox selectGroup;
 	private JPasswordField passwordText;
 	private JPasswordField passwordConfirmationText;
-	
+
 	private NavigationView navigation;
-	
+
 	// Info
 	private String groupNone = "Selecione um grupo";
-	private String[] groups = {groupNone, "administrator", "user"};
+	private String[] groups = {groupNone, "administrador", "usuario"};
 	private String path = "";
-	
+
 	X509Certificate certificate;
 
 	public CreateUserView(NavigationView navigation, int x, int y, int w, int h) {
@@ -64,46 +65,46 @@ public class CreateUserView extends JPanel {
 		this.add(this.uploadPath);
 
 		int uploadOrigin = pathOrigin + objectHeight;
-		
+
 		// Uploado key button
 		this.uploadButton = new JButton("Selecionar arquivo");
 		this.uploadButton.setBounds(margin, uploadOrigin, objectWidth, objectHeight);
 		this.uploadButton.addActionListener(this.selectFile());
 		this.add(this.uploadButton);
-		
+
 		int selectOrigin = uploadOrigin + objectHeight + margin;
 		this.selectGroup = new JComboBox<String>(this.groups);
 		this.selectGroup.setBounds(margin, selectOrigin, objectWidth, objectHeight);
 		this.add(this.selectGroup);
-		
+
 		int passwordLabelOrigin = selectOrigin + objectHeight + margin;
 		JLabel label1 = new JLabel("<html>Senha deve conter apenas númerais de 0 a 9<br> e deve possuir tamanho entre 6 a 8 caracteres:</html>");
 		label1.setBounds(margin, passwordLabelOrigin, objectWidth, objectHeight);
 		this.add(label1);
-		
+
 		int passwordOrigin = passwordLabelOrigin + objectHeight + margin;
 		this.passwordText = new JPasswordField();
 		this.passwordText.setBounds(margin, passwordOrigin, objectWidth, objectHeight);
 		this.add(this.passwordText);
-		
+
 		int passwordLabe2lOrigin = passwordOrigin + objectHeight;
 		JLabel label2 = new JLabel("Confirme a senha:");
 		label2.setBounds(margin, passwordLabe2lOrigin, objectWidth, objectHeight);
 		this.add(label2);
-		
+
 		int password2Origin = passwordLabe2lOrigin + objectHeight;
 		this.passwordConfirmationText = new JPasswordField();
 		this.passwordConfirmationText.setBounds(margin, password2Origin, objectWidth, objectHeight);
 		this.add(this.passwordConfirmationText);
-		
+
 		int buttonOrigin = h - objectHeight - margin;
-		
+
 		// Botao de voltar
 		this.backButton = new JButton("Voltar");
 		this.backButton.setBounds(margin, buttonOrigin, objectWidth/2, objectHeight);
 		this.backButton.addActionListener(this.back());
 		this.add(this.backButton);
-				
+
 		this.confirmationButton = new JButton("Criar");
 		this.confirmationButton.setBounds(objectWidth/2 + margin, buttonOrigin, objectWidth/2, objectHeight);
 		this.confirmationButton.addActionListener(this.create());
@@ -112,9 +113,9 @@ public class CreateUserView extends JPanel {
 		this.setBackground(Color.white);
 
 	}
-	
+
 	public ActionListener create() {
-		 return new ActionListener() {
+		return new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				// Verifica caminho especificado
 				if (path.equals("")) {
@@ -144,17 +145,17 @@ public class CreateUserView extends JPanel {
 					cleanPassword();
 					return;
 				}
-				
+
 				confirm(path, original, group);
 			}
 		};
 	}
-	
-	
+
+
 	private void confirm(String pathString, String password, String group) {
 		try {
 			certificate = CertifyService.sharedInstance().getCertificate(pathString);
-			
+
 			String ceriticateText = "<html>Versão: " + certificate.getVersion();
 			ceriticateText += "<br>Série: " + certificate.getSerialNumber();
 			ceriticateText += "<br>Validade: " + certificate.getNotAfter();
@@ -164,15 +165,15 @@ public class CreateUserView extends JPanel {
 			ceriticateText += "<br>Email: " + getEmailFromStringNameCert(certificate.getSubjectDN().getName());
 
 			ceriticateText += "</html>";
-			
+
 			new ConfirmView(this, ceriticateText);
-			
+
 		} catch (Exception e) {
 			String message = e.getLocalizedMessage();
 			JOptionPane.showMessageDialog(null, "Erro ao ler certificado: " + message);
 		}
 	}
-	
+
 	private String getEmailFromStringNameCert(String cert) {
 		String[] parts = cert.split(",");
 		String part = parts[0];
@@ -187,7 +188,7 @@ public class CreateUserView extends JPanel {
 			return part;
 		}
 	}
-	
+
 	private String getNameFromStringNameCert(String cert) {
 		String[] parts = cert.split(",");
 		String part = parts[1];
@@ -205,7 +206,7 @@ public class CreateUserView extends JPanel {
 	public void createUser() {
 		String password = new String(passwordText.getPassword());
 		String group = groups[selectGroup.getSelectedIndex()];
-		
+
 		try {
 			if (AuthenticationService.sharedInstance().createUser(group, password, certificate)) {
 				JOptionPane.showMessageDialog(null, "Usuario criado com sucesso!");
@@ -216,38 +217,40 @@ public class CreateUserView extends JPanel {
 			JOptionPane.showMessageDialog(null, message);
 		}	
 	}
-	
+
 	private void cleanPassword() {
 		this.passwordText.setText("");
 		this.passwordConfirmationText.setText("");
 	}
-	
+
 	public ActionListener back() {
-		 return new ActionListener() {
+		return new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				navigation.selectMenu();			
 			}
 		};
 	}
-	
+
 	public ActionListener selectFile() {
-		 return new ActionListener() {
+		return new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				 JFileChooser fileChooser = new JFileChooser();
-				 if(fileChooser.showOpenDialog(uploadButton) == JFileChooser.APPROVE_OPTION) {
-						path = fileChooser.getSelectedFile().getPath();
-					 	uploadPath.setText(path);
-				 }	 				
+				JFileChooser fileChooser = new JFileChooser();
+				fileChooser.setCurrentDirectory(new File("./tokens/Keys/"));
+
+				if(fileChooser.showOpenDialog(uploadButton) == JFileChooser.APPROVE_OPTION) {
+					path = fileChooser.getSelectedFile().getPath();
+					uploadPath.setText(path);
+				}	 				
 			}
 		};
 	}
-	
+
 	private void cleanAll() {
 		this.passwordConfirmationText.setText("");
 		this.passwordText.setText("");
 		this.path = "";
 		this.uploadPath.setText("");
 	}
-	
+
 
 }

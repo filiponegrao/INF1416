@@ -111,6 +111,12 @@ public class LoginView extends JFrame {
 					JOptionPane.showMessageDialog(null, "Usuário não encontrado");
 					return;
 				}
+				
+				// Verifica se o usuario esta bloqueado
+				if (user.isBlocked()) {
+					JOptionPane.showMessageDialog(null, "Usuário bloqueado por tentavias incorretas.");
+					return;
+				}
 
 				DBManager.insereRegistro(2001);
 				PasswordView passwordView = new PasswordView(viewTittle + ": Verificação de senha", user);
