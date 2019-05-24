@@ -86,9 +86,10 @@ public class LoginView extends JFrame {
     private ActionListener checkCredentials(JTextField usernameText) {
         return new ActionListener () {
             public void actionPerformed (ActionEvent e) {
-                DBManager.insereRegistro(2001);
 
                 String text = usernameText.getText();
+                
+                DBManager.insereRegistro(2001, text);
 
                 // Assertivas
                 if (text.equals("")) {
@@ -112,7 +113,7 @@ public class LoginView extends JFrame {
                 if (user == null) {
                     JOptionPane.showMessageDialog(null, "Usuário não encontrado");
 
-                    DBManager.insereRegistro(2005);
+                    DBManager.insereRegistro(2005, text);
 
                     return;
                 }
@@ -120,8 +121,6 @@ public class LoginView extends JFrame {
                 // Verifica se o usuario esta bloqueado
                 if (user.isBlocked()) {
                     JOptionPane.showMessageDialog(null, "Usuário bloqueado por tentavias incorretas.");
-
-                    DBManager.insereRegistro(2004);
 
                     return;
                 }

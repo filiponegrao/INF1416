@@ -29,6 +29,7 @@ import java.util.Random;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
+import javax.crypto.NoSuchPaddingException;
 import javax.xml.bind.DatatypeConverter;
 
 import model.TreeNode;
@@ -49,6 +50,12 @@ public class AuthenticationService {
 
     public User getUser() {
         return this.user;
+    }
+    
+    public void loggout() {
+    	this.user = null;
+    	this.privateKey = null;
+    	this.publicKey = null;
     }
 
     // MARK: ETAPA 1
@@ -118,7 +125,15 @@ public class AuthenticationService {
 
         Cipher cipher = Cipher.getInstance("DES/ECB/PKCS5Padding");
         cipher.init(Cipher.DECRYPT_MODE, key);
-        byte[] cipherPemBytes = Files.readAllBytes(path);
+        byte[] cipherPemBytes;
+		try {
+			cipherPemBytes = Files.readAllBytes(path);
+		} catch (IOException e) {
+            DBManager.insereRegistro(4004);
+
+			// TODO Auto-generated catch block
+			throw new Exception("Caminho para o arquivo da chave privada inválido.");
+		}
         byte[] pemBytes = cipher.doFinal(cipherPemBytes);
 
         String pemString = new String(pemBytes);
@@ -142,7 +157,8 @@ public class AuthenticationService {
         try {
             privateKey = getPrivateKey(password, path);
         } catch (Exception e) {
-            //            DBManager.log(4005);
+            DBManager.insereRegistro(4005);
+
             // Frase secreta incorreta
             throw new Exception("Frase secreta incorreta.");
         }
@@ -163,12 +179,9 @@ public class AuthenticationService {
         if(signature.verify(cipherMessage)) {
             return ;
         } else {
+            DBManager.insereRegistro(4006);
             throw new Exception("Chave privada inválida.");
-
         }
-
-        //        Database.log(4006, Validation1.user.getString("email"));
-
     }
 
 

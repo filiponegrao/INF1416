@@ -22,14 +22,21 @@ public class FileController {
 		return data;
 	}
 	
-    public String[][] getFilesIndex(String folderPath) throws Exception {
+    public String[][] getFilesIndex(String folderPath) throws Exception  {
         String indexPath = folderPath + "/index";
-        String indexString = new String(this.readFile(indexPath));
+        String indexString;
+		try {
+			indexString = new String(this.readFile(indexPath));
+		} catch (Exception e) {
+            DBManager.insereRegistro(8008);
+			throw new Exception("Falha na decriptação do arquivo de índice.");
+		}
         String[] indexLines = indexString.split("\n");
         String[][] indexTable = new String[indexLines.length][];
 
-        for(int i = 0; i < indexLines.length; i++)
+        for(int i = 0; i < indexLines.length; i++) {
             indexTable[i] = indexLines[i].split(" ");
+        }
 
         return indexTable;
     }
@@ -39,14 +46,14 @@ public class FileController {
         
         byte[] fileContent = getFileContent(filePath, key);
 
-        DBManager.insereRegistro(8013);
+        DBManager.insereRegistro(8013, "", filePath);
 
         if(!isSignatureFine(filePath, fileContent)) {
-            DBManager.insereRegistro(8016);
+            DBManager.insereRegistro(8016, "", filePath);
             
             throw new Exception("O arquivo não parece estar íntegro.");
         }
-        DBManager.insereRegistro(8014);
+        DBManager.insereRegistro(8014, "", filePath);
 
         return fileContent;
     }
@@ -87,7 +94,7 @@ public class FileController {
 
             return cipher.doFinal(fileBytes);
         } catch (Exception e) {
-//            Database.log(8015, filePath, Validation1.user.getString("email"));
+            DBManager.insereRegistro(8015);
             e.printStackTrace();
 
             throw new Exception("Chave privada incorreta");
@@ -140,6 +147,7 @@ public class FileController {
     
     public void createSecretFile(String filePath, String secretPath) throws Exception {
         byte[] fileContent = readFile(filePath);
+        DBManager.insereRegistro(8013, "", filePath);
         createAndWriteFile(secretPath, fileContent);
     }
     

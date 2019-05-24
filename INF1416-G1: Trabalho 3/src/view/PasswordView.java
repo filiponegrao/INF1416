@@ -161,6 +161,9 @@ public class PasswordView extends JFrame {
     }
 
     private void handleWrongTry() {
+    	
+        String triesString = Integer.toString(3 - this.tries);
+        JOptionPane.showMessageDialog(null, "Senha incorreta!" + triesString + " Tentativas restantes.");
 
         // Incrementa numero de tentativas erradas
         this.tries += 1;
@@ -188,8 +191,7 @@ public class PasswordView extends JFrame {
             dispose();
 
         } else {
-            String triesString = Integer.toString(3 - this.tries);
-            JOptionPane.showMessageDialog(null, "Senha incorreta!" + triesString + " Tentativas restantes.");
+   
         }
         cleanPassword();
     }

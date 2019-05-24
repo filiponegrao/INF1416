@@ -11,10 +11,6 @@ public class Main {
         DBManager.insereRegistro(1001);
         new LoginView("INF1416");
 
-        // Teste: Direto para a sessao de arquivos
-        //              AuthenticationService.sharedInstance().verifyEmail("admin@inf1416.puc-rio.br");
-        //              new NavigationView();
-        //
         DBManager.insereRegistro(1002);
     }
 

@@ -35,7 +35,7 @@ public class MenuView extends JPanel {
         int objectHeight = (h - (margin/2*5)) / 5;
 
         User user = AuthenticationService.sharedInstance().getUser();
-        if (user.getGroupName().equals("administrator")) {
+        if (user.getGroupName().equals("administrador")) {
             this.createUser = new JButton("1 - Cadastrar novo usário");
             this.createUser.setBounds(margin, margin, objectWidth, objectHeight);
             this.createUser.addActionListener(this.selectCreateUser());

@@ -8,6 +8,9 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+import controller.AuthenticationService;
+import controller.DBManager;
+
 public class ExitView  extends JPanel {
 
     private NavigationView navigation;
@@ -65,7 +68,10 @@ public class ExitView  extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 DBManager.insereRegistro(9003);
 
-                navigation.quit();
+                AuthenticationService.sharedInstance().loggout();
+                new LoginView("INF1416");
+                navigation.dispose();
+                
             }
         };
     }

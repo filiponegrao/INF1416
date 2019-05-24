@@ -104,12 +104,20 @@ public class DBManager {
 		}
 	}
 
-	private static boolean insereRegistro(int idMsg, String email) {
+	public static boolean insereRegistro(int idMsg, String email) {
 		return insereRegistro(idMsg, email, null);
 	}
 
 	public static boolean insereRegistro(int idMsg, String email, String arquivo) {
-		return insertIntoDb(String.format("INSERT INTO register (messageId, email, filename) VALUES ('%d', '%s', '%s')", idMsg, email, arquivo));
+		User user = AuthenticationService.sharedInstance().getUser();
+		String emailUser = email;
+		if (emailUser == null || emailUser.isEmpty()) {
+			if (user != null) {
+				emailUser = user.getEmail();
+			}
+		}
+		
+		return insertIntoDb(String.format("INSERT INTO register (messageId, email, filename) VALUES ('%d', '%s', '%s')", idMsg, emailUser, arquivo));
 	}
 
 

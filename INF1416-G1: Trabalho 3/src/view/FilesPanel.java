@@ -120,6 +120,7 @@ public class FilesPanel extends JPanel {
                         String fileOwner = table.getValueAt(table.getSelectedRow(), 2).toString();
                         String fileGroup = table.getValueAt(table.getSelectedRow(), 3).toString();
 
+                        DBManager.insereRegistro(8010, "", fileName);
 
                         checkAndOpenFile(fileName, fileSecret, fileOwner, fileGroup);
                     }
@@ -138,6 +139,8 @@ public class FilesPanel extends JPanel {
         this.add(scrollPane);
 
         this.remove(this.listButton);
+        
+        DBManager.insereRegistro(8009);
     }
 
     public void checkAndOpenFile(String fileName, String fileSecret, String fileOwner, String fileGroup) {
@@ -145,6 +148,8 @@ public class FilesPanel extends JPanel {
         String secretPath = this.path + "/" + fileSecret;
 
         if (FileController.sharedInstance().checkAccess(fileOwner, fileGroup)) {
+            DBManager.insereRegistro(8011, "", filePath);
+        	
             try {
                 FileController.sharedInstance().createSecretFile(filePath, secretPath);
             } catch (Exception e) {
@@ -153,7 +158,7 @@ public class FilesPanel extends JPanel {
 
             }
         } else {
-            DBManager.insereRegistro(80012);
+            DBManager.insereRegistro(8012, "", filePath);
 
             JOptionPane.showMessageDialog(null, "Voce não possui permissão para ler este arquivo");
         }
@@ -192,15 +197,19 @@ public class FilesPanel extends JPanel {
     public ActionListener buttonListClicked() {
         return new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                DBManager.insereRegistro(8003);
+                DBManager.insereRegistro(8005);
 
                 try {
                     String[][] data = FileController.sharedInstance().getFilesIndex(path);
+                    DBManager.insereRegistro(8005);
+                    DBManager.insereRegistro(8006);
 
                     addTable(data);
-
+                    
                 } catch (Exception e1) {
                     JOptionPane.showMessageDialog(null, "Erro ao ler arquivo de index");
+                    DBManager.insereRegistro(8007);
+
                     e1.printStackTrace();
                 }
             }
